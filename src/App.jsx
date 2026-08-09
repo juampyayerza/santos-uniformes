@@ -208,7 +208,7 @@ Precios de lista (transferencia). Pagando en efectivo: ${DESCUENTO_EFECTIVO_PCT}
           <header style={{ background: "var(--navy)", color: "var(--paper)" }} className="px-5 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div>
-                <div style={{ fontFamily: "system-ui, sans-serif", letterSpacing: "0.04em" }} className="font-bold text-lg leading-none">SANTOS UNIFORMES</div>
+                <div style={{ fontFamily: "system-ui, sans-serif", letterSpacing: "0.04em" }} className="font-bold text-lg leading-none">DG UNIFORMES</div>
                 <div style={{ color: "var(--orange)", fontSize: 11, letterSpacing: "0.12em" }} className="uppercase font-semibold">Uniformes del Colegio San Pablo Maschwitz</div>
               </div>
             </div>
@@ -374,7 +374,7 @@ Precios de lista (transferencia). Pagando en efectivo: ${DESCUENTO_EFECTIVO_PCT}
                 <span>TOTAL</span>
                 <span>{fmt(totalPrecio)}</span>
               </div>
-              <div style={{ color: "var(--steel)" }} className="text-xs mt-3">Precio de lista (transferencia). El pago se coordina de forma manual con Santos Uniformes.</div>
+              <div style={{ color: "var(--steel)" }} className="text-xs mt-3">Precio de lista (transferencia). El pago se coordina de forma manual con DG Uniformes.</div>
             </div>
 
             <div className="mt-4">
