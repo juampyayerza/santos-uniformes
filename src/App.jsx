@@ -2,9 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import Papa from "papaparse";
 import { Plus, Minus, Trash2, ClipboardCopy, Check, Package, ImageOff, Banknote, MessageCircle } from "lucide-react";
 
-// URL pública (CSV) de la hoja "STOCK WEB" del Google Sheets real de Santos Uniformes.
+// URL pública (CSV) de la hoja "STOCK WEB" del Google Sheets real de DG Uniformes.
 // Se publica desde Archivo > Compartir > Publicar en la Web, solo esa pestaña.
 const STOCK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSPSnBC9z0PHGPDR7101eJvZwhMyOBkeJBUqExVzvF-OCANf_D2BRcVsbH85KdSfuD8ThhlzibMwD3v/pub?gid=118823573&single=true&output=csv";
+
+// URL de la Apps Script Web App que agrega cada pedido a la hoja "Copia de PEDIDOS WEB".
+const PEDIDOS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxealJei4_OBmWUytyuQ6lbvd9P8MVuasLGxwdQiIJWSGHm7uPvQmmTqrAsFbs4x-E1/exec";
 
 // ---------------------------------------------------------------------------
 // DATOS DE PRODUCTOS
@@ -196,6 +199,25 @@ Precios de lista (transferencia). Pagando en efectivo: ${DESCUENTO_EFECTIVO_PCT}
   function enviarPedido() {
     const numero = generarNumeroPedido();
     setVista("confirmado");
+
+    // 1) Registrar el pedido en la hoja "Copia de PEDIDOS WEB" (no bloquea el resto si falla)
+    try {
+      fetch(PEDIDOS_WEBAPP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          numeroPedido: numero,
+          fecha: new Date().toLocaleDateString("es-AR"),
+          cliente: datosCliente.nombre,
+          telefono: datosCliente.telefono,
+          formaPago: formaPago === "efectivo" ? "Efectivo" : "Transferencia",
+          items: carrito.map((l) => ({ articulo: l.nombre, talle: l.talle, cantidad: l.cantidad })),
+        }),
+      }).catch(() => {}); // si falla la conexión, no interrumpe el flujo del pedido
+    } catch (err) {}
+
+    // 2) Abrir WhatsApp con el pedido ya redactado
     const numeroWhatsapp = "5491150100046";
     const wa = `https://wa.me/${numeroWhatsapp}?text=${encodeURIComponent(textoPedido(numero))}`;
     window.open(wa, "_blank");
