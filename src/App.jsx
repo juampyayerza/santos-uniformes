@@ -86,6 +86,12 @@ const PRODUCTOS = [
 //   return registro ? registro.cantidad > 0 : false;
 // }
 
+// Equivalencias de talle (solo informativas, se muestran en la web; no afectan stock ni planilla).
+// Clave: id de producto -> { talle: "rango de calzado" }. Un talle sin entrada no muestra nada.
+const EQUIVALENCIAS_TALLE = {
+  "ME-003": { SS: "29 al 32", S: "33 al 36", M: "37 al 40", L: "41 al 44", XL: "45 al 46" },
+};
+
 const fmt = (n) => n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
 export default function App() {
@@ -474,27 +480,38 @@ function ProductCard({ producto, onAgregar, hayStock }) {
 
         <div className="mb-3">
           <div style={{ color: "var(--steel)" }} className="text-[11px] uppercase tracking-wide mb-1">Talle</div>
-          <div className="flex flex-wrap gap-1">
+          <div
+            className={EQUIVALENCIAS_TALLE[producto.id] ? "grid" : "flex flex-wrap gap-1"}
+            style={EQUIVALENCIAS_TALLE[producto.id] ? { gridTemplateColumns: "repeat(3, 1fr)", gap: "14px 10px" } : undefined}
+          >
             {producto.talles.map((t) => {
               const disponible = hayStock(producto.id, t.talle);
+              const rango = EQUIVALENCIAS_TALLE[producto.id]?.[t.talle];
               return (
-                <button
-                  key={t.talle}
-                  onClick={() => setTalleSel(t)}
-                  title={disponible ? undefined : "Sin stock"}
-                  style={{
-                    border: talleSel.talle === t.talle ? "1px solid var(--orange)" : "1px solid var(--line)",
-                    background: talleSel.talle === t.talle ? "var(--orange)" : disponible ? "white" : "#F2F1EC",
-                    color: talleSel.talle === t.talle ? "white" : disponible ? "var(--ink)" : "#B9B4A6",
-                    textDecoration: disponible ? "none" : "line-through",
-                  }}
-                  className="px-2 py-1 text-xs font-semibold"
-                >
-                  {t.talle}
-                </button>
+                <div key={t.talle} className="flex flex-col items-stretch text-center">
+                  <button
+                    onClick={() => setTalleSel(t)}
+                    title={disponible ? undefined : "Sin stock"}
+                    style={{
+                      border: talleSel.talle === t.talle ? "1px solid var(--orange)" : "1px solid var(--line)",
+                      background: talleSel.talle === t.talle ? "var(--orange)" : disponible ? "white" : "#F2F1EC",
+                      color: talleSel.talle === t.talle ? "white" : disponible ? "var(--ink)" : "#B9B4A6",
+                      textDecoration: disponible ? "none" : "line-through",
+                    }}
+                    className={rango ? "px-2 py-2 text-sm font-semibold" : "px-2 py-1 text-xs font-semibold"}
+                  >
+                    {t.talle}
+                  </button>
+                  {rango && (
+                    <span style={{ color: "var(--steel)" }} className="text-[11px] leading-tight mt-1 whitespace-nowrap">{rango}</span>
+                  )}
+                </div>
               );
             })}
           </div>
+          {EQUIVALENCIAS_TALLE[producto.id] && (
+            <div style={{ color: "var(--steel)" }} className="text-[11px] mt-3">Rangos según número de calzado (talle argentino)</div>
+          )}
           {!talleSelDisponible && (
             <div style={{ color: "#B04A3B" }} className="text-[11px] font-semibold mt-1">Sin stock en este talle</div>
           )}
