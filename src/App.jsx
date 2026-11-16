@@ -92,6 +92,15 @@ const EQUIVALENCIAS_TALLE = {
   "ME-003": { SS: "29 al 32", S: "33 al 36", M: "37 al 40", L: "41 al 44", XL: "45 al 46" },
 };
 
+// Convierte el texto de precio que llega del CSV ("$35.000", "35,000", "35000", "35.000,00") a número.
+function parsePrecio(raw) {
+  let s = String(raw ?? "").replace(/[^0-9.,]/g, "");
+  s = s.replace(/[.,]\d{1,2}$/, ""); // descarta decimales (centavos)
+  s = s.replace(/[.,]/g, "");        // descarta separadores de miles
+  const n = parseInt(s, 10);
+  return isNaN(n) || n <= 0 ? null : n;
+}
+
 const fmt = (n) => n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
 export default function App() {
@@ -104,6 +113,7 @@ export default function App() {
 
   // ---- Stock en vivo (leído desde Google Sheets, hoja STOCK WEB) ----
   const [stockMap, setStockMap] = useState(null); // null = todavía no cargó
+  const [precioMap, setPrecioMap] = useState(null); // precios leídos de la planilla (pisan los del código)
   const [stockError, setStockError] = useState(false);
   const [stockDebug, setStockDebug] = useState({ estado: "cargando", filas: 0, hora: null, mensaje: "" });
 
@@ -120,14 +130,20 @@ export default function App() {
       skipEmptyLines: true,
       complete: (res) => {
         const mapa = {};
+        const precios = {};
         res.data.forEach((fila) => {
           const id = (fila["ID"] || "").trim();
           const talle = (fila["Talle"] || "").trim();
           const disponibleRaw = fila["Disponible (en vivo desde STOCK)"];
           const disponible = parseInt(disponibleRaw, 10);
-          if (id && talle) mapa[`${id}-${talle}`] = isNaN(disponible) ? null : disponible;
+          if (id && talle) {
+            mapa[`${id}-${talle}`] = isNaN(disponible) ? null : disponible;
+            const precio = parsePrecio(fila["Precio de Lista"]);
+            if (precio) precios[`${id}-${talle}`] = precio;
+          }
         });
         setStockMap(mapa);
+        setPrecioMap(precios);
         const filasValidas = Object.keys(mapa).length;
         setStockDebug({
           estado: filasValidas > 0 ? "ok" : "vacio",
@@ -150,6 +166,11 @@ export default function App() {
     const val = stockMap[`${id}-${talle}`];
     if (val === undefined || val === null) return true;
     return val > 0;
+  }
+
+  // Precio vigente: el de la planilla si está disponible; si no, el que está escrito en el código.
+  function precioDe(id, talle, precioBase) {
+    return precioMap?.[`${id}-${talle}`] ?? precioBase;
   }
 
   const productosFiltrados = useMemo(() => PRODUCTOS.filter((p) => p.categoria === categoriaActiva), [categoriaActiva]);
@@ -278,7 +299,7 @@ Precios de lista (transferencia). Pagando en efectivo: ${DESCUENTO_EFECTIVO_PCT}
           <main className="max-w-5xl mx-auto px-5 py-6">
             <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
               {productosFiltrados.map((p) => (
-                <ProductCard key={p.id} producto={p} onAgregar={agregarAlCarrito} hayStock={hayStock} />
+                <ProductCard key={p.id} producto={p} onAgregar={agregarAlCarrito} hayStock={hayStock} precioDe={precioDe} />
               ))}
             </div>
           </main>
@@ -447,7 +468,7 @@ function DescuentoEfectivoBanner() {
   );
 }
 
-function ProductCard({ producto, onAgregar, hayStock }) {
+function ProductCard({ producto, onAgregar, hayStock, precioDe }) {
   const primerConStock = producto.talles.find((t) => hayStock(producto.id, t.talle)) || producto.talles[0];
   const [talleSel, setTalleSel] = useState(primerConStock);
   const [agregado, setAgregado] = useState(false);
@@ -456,7 +477,7 @@ function ProductCard({ producto, onAgregar, hayStock }) {
 
   function handleAgregar() {
     if (!talleSelDisponible) return;
-    onAgregar(producto, talleSel);
+    onAgregar(producto, { ...talleSel, precio: precioDe(producto.id, talleSel.talle, talleSel.precio) });
     setAgregado(true);
     setTimeout(() => setAgregado(false), 1200);
   }
@@ -476,7 +497,7 @@ function ProductCard({ producto, onAgregar, hayStock }) {
       <div className="p-4 flex flex-col flex-1">
         <div style={{ color: "var(--steel)" }} className="text-xs font-mono mb-1">{producto.id}</div>
         <div className="font-semibold text-sm mb-1 leading-snug" style={{ color: "var(--navy)" }}>{producto.nombre}</div>
-        <div className="font-bold text-lg mb-3">{fmt(talleSel.precio)}</div>
+        <div className="font-bold text-lg mb-3">{fmt(precioDe(producto.id, talleSel.talle, talleSel.precio))}</div>
 
         <div className="mb-3">
           <div style={{ color: "var(--steel)" }} className="text-[11px] uppercase tracking-wide mb-1">Talle</div>
