@@ -272,20 +272,21 @@ Precios de lista (transferencia). Pagando en efectivo: ${DESCUENTO_EFECTIVO_PCT}
           </header>
 
           {vista === "catalogo" && (
-            <div style={{ background: "var(--paper)" }} className="max-w-5xl mx-auto px-5 pt-4">
+            <div style={{ background: "var(--paper)", borderBottom: "1px solid var(--line)" }} className="max-w-5xl mx-auto px-5 pt-3 pb-3 sm:pt-4">
               <DescuentoEfectivoBanner />
 
-              <div className="flex gap-2 overflow-x-auto pb-1 mt-4" style={{ borderBottom: "1px solid var(--line)" }}>
+              <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-3">
                 {CATEGORIAS.map((c) => (
                   <button
                     key={c}
                     onClick={() => setCategoriaActiva(c)}
                     style={{
-                      borderBottom: categoriaActiva === c ? "3px solid var(--orange)" : "3px solid transparent",
-                      color: categoriaActiva === c ? "var(--navy)" : "var(--steel)",
-                      fontWeight: categoriaActiva === c ? 700 : 500,
+                      background: categoriaActiva === c ? "var(--navy)" : "white",
+                      color: categoriaActiva === c ? "white" : "var(--ink)",
+                      border: categoriaActiva === c ? "1px solid var(--navy)" : "1px solid var(--line)",
+                      fontWeight: categoriaActiva === c ? 700 : 600,
                     }}
-                    className="px-3 py-2 whitespace-nowrap text-sm uppercase tracking-wide"
+                    className="px-2.5 py-1.5 sm:px-3 sm:py-2 whitespace-nowrap text-[11px] sm:text-sm uppercase sm:tracking-wide"
                   >
                     {c}
                   </button>
@@ -454,13 +455,13 @@ Precios de lista (transferencia). Pagando en efectivo: ${DESCUENTO_EFECTIVO_PCT}
 
 function DescuentoEfectivoBanner() {
   return (
-    <div style={{ background: "var(--navy)", border: "1px solid var(--orange)" }} className="flex items-center gap-3 px-4 py-3">
-      <div style={{ background: "var(--orange)" }} className="w-9 h-9 flex items-center justify-center flex-shrink-0">
-        <Banknote size={18} color="white" />
+    <div style={{ background: "var(--navy)", border: "1px solid var(--orange)" }} className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3">
+      <div style={{ background: "var(--orange)" }} className="w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center flex-shrink-0">
+        <Banknote size={16} color="white" />
       </div>
       <div style={{ color: "white" }}>
-        <div style={{ color: "var(--orange)" }} className="text-xs font-bold uppercase tracking-wide">Beneficio</div>
-        <div className="text-sm font-semibold leading-tight">
+        <div style={{ color: "var(--orange)" }} className="text-[10px] sm:text-xs font-bold uppercase tracking-wide">Beneficio</div>
+        <div className="text-xs sm:text-sm font-semibold leading-tight">
           {DESCUENTO_EFECTIVO_PCT}% de descuento pagando en efectivo.
         </div>
       </div>
